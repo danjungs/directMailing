@@ -1,50 +1,61 @@
 package integracao;
-import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
+
+import org.apache.commons.mail.EmailException;
 
 import modelo.*;
 import DAO.*;
+import visual.*;
 
 public aspect IntegracaoAcessos {
-
 	
-	public static void main(String[] args) {
-		Acessos acessos = new Acessos();
+	Acessos acessos = new Acessos();
+	String textoFinal;
+	Cliente a;
+	Texto b;
+	
+	pointcut inicio1(): set(String InterfaceVisual.nomeArquivoCliente);
+	pointcut inicio2(): set(String InterfaceVisual.nomeArquivoTexto);
+	pointcut redacao():	set(String InterfaceVisual.nomeChaveCodigo);
+	pointcut envio():   set(String textoFinal);
+	
+	//	Adiciona ao ArrayList de Clientes do objeto acessos as informações dos clientes do arquivo informado
+	after(InterfaceVisual iv): inicio1() && target(iv){
 		Input in = new Input();
-		
-		String ArquivoC = null;
-		String ArquivoT = null;
-		
-		JFileChooser chooser = new JFileChooser();
-		chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-		chooser.setDialogTitle("Escolha o arquivo de Clientes:");
-		int ret = chooser.showOpenDialog(null);
-		if (ret==JFileChooser.APPROVE_OPTION) {
-			ArquivoC = chooser.getSelectedFile().getAbsolutePath();
-		}
-		in.setArquivoClientes(ArquivoC);
-		
-		JFileChooser chooserT = new JFileChooser();
-		chooserT.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-		chooserT.setDialogTitle("Escolha o arquivo de Textos:");
-		int retT = chooserT.showOpenDialog(null);
-		if (retT==JFileChooser.APPROVE_OPTION) {
-			ArquivoT = chooserT.getSelectedFile().getAbsolutePath();
-		}
-		in.setArquivoTextos(ArquivoT);
-		
-		acessos.setTextos(in.getTextos());
+		in.setArquivoClientes(iv.getNomeArquivoCliente());
 		acessos.setClientes(in.consultaClientes());
-		Cliente a = acessos.getCadastro("4");
-		//System.out.println(a.getCodigo());
-		//System.out.println(a.getNome());
-		//System.out.println(a.getProfissao());
-		//System.out.println(a.getEndereco());
-		//System.out.println(a.getEmail());
-		Texto b = acessos.getTexto("Contrato");
-		//System.out.println(b.getTipo());
-		System.out.println(b.getTexto());
-		
 	}
-
+	
+	//	Adiciona ao ArrayList de Textos do objeto acessos os textos do arquivo informado
+	after(InterfaceVisual iv): inicio2() && target(iv){
+		Input in = new Input();
+		in.setArquivoTextos(iv.getNomeArquivoTexto());
+		acessos.setTextos(in.getTextos());
+	}
+	
+	//  Chama a função para juntar a mala direta com os atributos do cliente
+	after(InterfaceVisual iv,String codigo): redacao() && args(codigo) && target(iv){
+		Gerador ger = new Gerador();
+		String redacao = iv.getTipoTexto();
+		System.out.println("Selecionado: " + codigo + " " + redacao);
+		a = acessos.getCadastro(codigo);
+		b = acessos.getTexto(redacao);
+		textoFinal = ger.geraTexto(a,b.getTexto());
+	}
+	
+	//	envio do texto por email
+	after(): envio(){
+		Gerador ger = new Gerador();
+		try {
+			ger.mandaEmail(a.getEmail(),textoFinal);
+		} catch (EmailException e) {
+			System.out.println("Email não enviado.");
+			e.printStackTrace();
+		}
+	
+	}
+	//	gera PDF do texto
+	after(): envio(){
+		Gerador ger = new Gerador();
+		ger.geraPDF(textoFinal);
+	}
 }
