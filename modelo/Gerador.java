@@ -54,7 +54,7 @@ public class Gerador {
 		//mail.setHostName("smtp.mail.yahoo.com.br");
 		mail.setHostName("smtp.gmail.com");
 		mail.setSmtpPort(465);
-		mail.addTo("danieljungstedt@gmail.com", "Daniel");
+		mail.addTo(destino);
 		mail.send();
 		System.out.println("Email enviado com sucesso.");		
 	}
