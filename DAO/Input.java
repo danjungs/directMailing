@@ -26,6 +26,7 @@ public class Input {
 		this.arquivoClientes = arquivo;
 	}
 
+  //Retorna todos os Clientes em um Array de CLientes.
 	public ArrayList<Cliente> consultaClientes (){
 		ArrayList<Cliente> acessos = new ArrayList<Cliente>();
 		
@@ -65,6 +66,7 @@ public class Input {
 		return acessos; 
 	}
 	
+	//Retorna todos os Textos em um Array de Textos.
 	public ArrayList<Texto> getTextos(){
 		ArrayList<Texto> acessos = new ArrayList<Texto>();
 		
